@@ -174,20 +174,23 @@ plt.xticks(rotation=0); plt.tight_layout(); plt.savefig(f"{FIG}/g01_notas.png");
 
 plt.figure(figsize=(7,5))  # G2 nota media: atrasou vs nao (INSIGHT principal)
 df.groupby("atrasou")["review_score"].mean().plot.bar(color=[VERDE, VERM])
-plt.title("Nota média: no prazo vs. atrasado"); plt.ylabel("Nota média")
-plt.xticks([0,1], ["No prazo", "Atrasado"], rotation=0); plt.tight_layout()
+plt.title("Nota média: no prazo vs. atrasado"); plt.ylabel("Nota média (1 a 5)")
+plt.xlabel(""); plt.xticks([0,1], ["Entregue no prazo", "Entregue atrasado"], rotation=0); plt.tight_layout()
 plt.savefig(f"{FIG}/g02_atraso_nota.png"); plt.close()
 
 plt.figure(figsize=(7,5))  # G3 tempo de entrega por satisfacao
 sns.boxplot(data=df, x="satisfeito", y="tempo_entrega_dias", palette=[VERM, VERDE])
 plt.title("Tempo de entrega vs. satisfação"); plt.xticks([0,1], ["Insatisfeito", "Satisfeito"])
-plt.ylabel("Tempo de entrega (dias)"); plt.ylim(0, 60); plt.tight_layout()
+plt.xlabel(""); plt.ylabel("Tempo de entrega (dias)"); plt.ylim(0, 60); plt.tight_layout()
 plt.savefig(f"{FIG}/g03_tempo_satisfacao.png"); plt.close()
 
 plt.figure(figsize=(8,6))  # G4 correlacao
 num = ["review_score","tempo_entrega_dias","atraso_dias","frete_total","preco_total","n_itens","parcelas"]
-sns.heatmap(df[num].corr(), annot=True, fmt=".2f", cmap="coolwarm", center=0)
-plt.title("Matriz de correlação"); plt.tight_layout(); plt.savefig(f"{FIG}/g04_correlacao.png"); plt.close()
+nomes_corr = ["Nota", "Tempo de entrega", "Atraso", "Frete", "Preço", "Nº de itens", "Parcelas"]
+sns.heatmap(df[num].corr(), annot=True, fmt=".2f", cmap="coolwarm", center=0,
+            xticklabels=nomes_corr, yticklabels=nomes_corr)
+plt.title("Matriz de correlação"); plt.xticks(rotation=30, ha="right"); plt.yticks(rotation=0)
+plt.tight_layout(); plt.savefig(f"{FIG}/g04_correlacao.png"); plt.close()
 
 plt.figure(figsize=(8,5))  # G5 top categorias
 df.categoria.value_counts().head(10).sort_values().plot.barh(color=AZUL)
@@ -196,8 +199,8 @@ plt.tight_layout(); plt.savefig(f"{FIG}/g05_categorias.png"); plt.close()
 
 plt.figure(figsize=(7,5))  # G6 satisfacao por regiao
 (df.groupby("regiao")["satisfeito"].mean()*100).sort_values().plot.bar(color=VERDE)
-plt.title("Clientes satisfeitos por região (%)"); plt.ylabel("% satisfeitos")
-plt.xticks(rotation=20); plt.tight_layout(); plt.savefig(f"{FIG}/g06_regiao.png"); plt.close()
+plt.title("Clientes satisfeitos por região (%)"); plt.ylabel("% de clientes satisfeitos")
+plt.xlabel(""); plt.xticks(rotation=20); plt.tight_layout(); plt.savefig(f"{FIG}/g06_regiao.png"); plt.close()
 print("Graficos G1-G6 salvos.")
 
 # ==========================================================================
@@ -255,9 +258,11 @@ Xr_tr, Xr_te, yr_tr, yr_te = train_test_split(X, yr, test_size=0.25, random_stat
 reg = LinearRegression().fit(Xr_tr, yr_tr); yr_pred = reg.predict(Xr_te)
 print(f"  R2 {r2_score(yr_te, yr_pred):.3f} | MAE {mean_absolute_error(yr_te, yr_pred):.2f}")
 plt.figure(figsize=(7,5))
-imp = pd.Series(np.abs(reg.coef_), index=feats).sort_values()
+nomes_feat = {"tempo_entrega_dias":"Tempo de entrega", "atraso_dias":"Atraso", "frete_total":"Frete",
+              "preco_total":"Preço", "n_itens":"Nº de itens", "parcelas":"Parcelas"}
+imp = pd.Series(np.abs(reg.coef_), index=[nomes_feat[f] for f in feats]).sort_values()
 imp.plot.barh(color="#8172B3")
-plt.title("Peso de cada fator na nota (regressão linear)"); plt.tight_layout()
+plt.title("Peso de cada fator na nota (regressão linear)"); plt.xlabel("Influência na nota"); plt.tight_layout()
 plt.savefig(f"{FIG}/g10_regressao.png"); plt.close()
 print("Grafico G10 salvo.")
 
@@ -276,10 +281,12 @@ km = KMeans(n_clusters=4, random_state=42, n_init=10)
 rfm["cluster"] = km.fit_predict(Xrfm)
 print(f"Silhouette: {silhouette_score(Xrfm, rfm.cluster):.3f}")
 print(rfm.groupby("cluster")[["Recencia","Frequencia","Monetario"]].mean().round(1))
-comp = PCA(n_components=2).fit_transform(Xrfm)
 plt.figure(figsize=(8,6))
-sns.scatterplot(x=comp[:,0], y=comp[:,1], hue=rfm.cluster, palette="Set2", alpha=0.6)
-plt.title("Segmentos de clientes (K-Means)"); plt.xlabel("Componente 1"); plt.ylabel("Componente 2")
+sns.scatterplot(data=rfm, x="Recencia", y="Monetario", hue="cluster", palette="Set2", alpha=0.5, s=25)
+plt.yscale("log")
+plt.title("Segmentos de clientes (K-Means)")
+plt.xlabel("Recência — dias desde a última compra"); plt.ylabel("Valor gasto (R$, escala log)")
+plt.legend(title="Grupo")
 plt.tight_layout(); plt.savefig(f"{FIG}/g11_clusters.png"); plt.close()
 print("Grafico G11 salvo.")
 
