@@ -26,3 +26,6 @@ figuras_slides/
 main.py
 build_notebook.py
 build_slides.js
+
+# Pasta temporaria de conferencia dos slides
+qa_slides/
