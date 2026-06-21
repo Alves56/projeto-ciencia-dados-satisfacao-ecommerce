@@ -9,8 +9,13 @@ node_modules/
 package.json
 package-lock.json
 
-# Apresentacao em slides (entregue separadamente, fora do repositorio)
+# Apresentacao e material de estudo pessoal (NAO vao para o repositorio)
 *.pptx
+*.docx
+*.pdf
+
+# Scripts geradores extras
+build_guia.js
 
 # Arquivos temporarios do Office (aparecem quando o arquivo esta aberto)
 ~$*
