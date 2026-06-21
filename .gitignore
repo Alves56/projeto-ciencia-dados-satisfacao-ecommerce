@@ -1,0 +1,21 @@
+# Configuracoes locais e lixo tecnico (NAO enviar para o GitHub)
+.claude/
+.vscode/
+__pycache__/
+*.pyc
+
+# Dependencias de ferramentas (geradas automaticamente)
+node_modules/
+package.json
+package-lock.json
+
+# Apresentacao em slides (entregue separadamente, fora do repositorio)
+*.pptx
+
+# Arquivos temporarios do Office (aparecem quando o arquivo esta aberto)
+~$*
+
+# Arquivos de bastidor / vazios
+main.py
+build_notebook.py
+build_slides.js
