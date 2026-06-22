@@ -192,6 +192,18 @@ sns.heatmap(df[num].corr(), annot=True, fmt=".2f", cmap="coolwarm", center=0,
 plt.title("Matriz de correlação"); plt.xticks(rotation=30, ha="right"); plt.yticks(rotation=0)
 plt.tight_layout(); plt.savefig(f"{FIG}/g04_correlacao.png"); plt.close()
 
+# G14 - Correlacao de cada fator COM A NOTA (barra, bem mais intuitivo que a matriz)
+ren = {"tempo_entrega_dias": "Tempo de entrega", "atraso_dias": "Atraso", "frete_total": "Frete",
+       "preco_total": "Preço", "n_itens": "Nº de itens", "parcelas": "Parcelas"}
+cn = df[num].corr()["review_score"].drop("review_score").abs().sort_values()
+cn.index = [ren[i] for i in cn.index]
+plt.figure(figsize=(8, 5))
+cn.plot.barh(color=AZUL)
+for i, v in enumerate(cn.values):
+    plt.text(v + 0.006, i, f"{v:.2f}", va="center", fontsize=11, color="#1E293B", fontweight="bold")
+plt.title("O que mais se relaciona com a nota"); plt.xlabel("Força da relação com a nota (correlação)")
+plt.xlim(0, cn.max() * 1.25); plt.tight_layout(); plt.savefig(f"{FIG}/g14_corr_nota.png"); plt.close()
+
 plt.figure(figsize=(8,5))  # G5 top categorias
 df.categoria.value_counts().head(10).sort_values().plot.barh(color=AZUL)
 plt.title("Top 10 categorias por volume de pedidos"); plt.xlabel("Pedidos")
@@ -217,9 +229,30 @@ for i, v in enumerate(motivos.values):
     plt.text(v + 1.5, i, f"{v:.0f}%", va="center", color="#1E293B", fontsize=11, fontweight="bold")
 plt.title("Características dos pedidos mal avaliados"); plt.xlabel("% dos clientes insatisfeitos"); plt.xlim(0, 100)
 plt.tight_layout(); plt.savefig(f"{FIG}/g13_motivos.png"); plt.close()
-print("Motivos da insatisfacao (% dos insatisfeitos):")
+
+# G15 - PIZZA: motivo PRINCIPAL de cada cliente insatisfeito (exclusivo -> soma 100%)
+medt, medf, medp = df.tempo_entrega_dias.median(), df.frete_total.median(), df.preco_total.median()
+def motivo_principal(r):
+    if r.atrasou == 1: return "Atraso na entrega"
+    if r.tempo_entrega_dias > medt: return "Entrega lenta"
+    if r.frete_total > medf: return "Frete alto"
+    if r.preco_total > medp: return "Preço alto"
+    return "Outros motivos"
+ins2 = df[df.satisfeito == 0].copy()
+ins2["motivo"] = ins2.apply(motivo_principal, axis=1)
+ordem = ["Atraso na entrega", "Entrega lenta", "Frete alto", "Preço alto", "Outros motivos"]
+dist = ins2["motivo"].value_counts().reindex(ordem).dropna()
+plt.figure(figsize=(7.5, 6))
+cores_pizza = ["#C44E52", "#DD8452", "#8172B3", "#4C72B0", "#B0B0B0"]
+dist.plot.pie(autopct="%1.1f%%", startangle=90, colors=cores_pizza[:len(dist)],
+              wedgeprops=dict(edgecolor="white", linewidth=2), textprops=dict(fontsize=12))
+plt.title("Motivo principal de cada cliente insatisfeito"); plt.ylabel("")
+plt.tight_layout(); plt.savefig(f"{FIG}/g15_motivos_pizza.png"); plt.close()
+print("Motivos da insatisfacao - % com cada problema (nao exclusivo):")
 print(motivos.round(1).sort_values(ascending=False).to_string())
-print("Graficos G1-G6 + motivos salvos.")
+print("\nMotivo PRINCIPAL (exclusivo, soma 100%):")
+print((dist / dist.sum() * 100).round(1).to_string())
+print("Graficos salvos.")
 
 # ==========================================================================
 # CONCEITO 7 e 9 - CLASSIFICACAO (prever satisfacao) + METRICAS
