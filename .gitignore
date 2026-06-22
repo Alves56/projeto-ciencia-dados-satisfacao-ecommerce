@@ -29,3 +29,6 @@ build_slides.js
 
 # Pasta temporaria de conferencia dos slides
 qa_slides/
+
+# Material pessoal de apoio (nao vai para o repositorio)
+GUIA_DO_CODIGO.md
